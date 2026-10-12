@@ -1,0 +1,594 @@
+  <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lanan</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: #f5f5f5;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    display: flex;
+    justify-content: center;
+  }
+  .app { width: 100%; max-width: 680px; background: #fff; min-height: 100vh; }
+
+.cover {
+  width: 100%;
+  height: 200px;
+  background: url('20260722_214356.jpg') center/cover no-repeat;
+  position: relative;
+}
+.cover::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, rgba(245,245,245,0) 0%, rgba(245,245,245,1) 100%);
+}
+  .profile-top {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    padding: 0 20px;
+    margin-top: -50px;
+    position: relative;
+    z-index: 2;
+  }
+  .avatar {
+    width: 100px; height: 100px;
+    border-radius: 50%; overflow: hidden;
+    border: 4px solid #fff;
+    background: #e5e5e5; flex-shrink: 0;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .profile-meta { padding-bottom: 8px; }
+  .profile-meta .name { font-size: 22px; font-weight: 700; color: #222; }
+  .profile-meta .handle { font-size: 14px; color: #999; margin-top: 2px; }
+
+  .profile-bio { padding: 16px 20px 0; }
+  .profile-bio .text { font-size: 15px; color: #444; line-height: 1.6; }
+
+  .tags { display: flex; gap: 8px; padding: 12px 20px 0; flex-wrap: wrap; }
+  .tag {
+    background: #f0f0f0; color: #666;
+    font-size: 13px; padding: 5px 12px; border-radius: 20px;
+  }
+
+  .info-line {
+    padding: 12px 20px 0;
+    font-size: 14px; color: #666;
+    display: flex; gap: 16px;
+  }
+  .info-line .num { font-weight: 700; color: #222; }
+
+  .tabs {
+    display: flex; border-bottom: 1px solid #eee;
+    margin-top: 20px; position: sticky; top: 0;
+    background: #fff; z-index: 20;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 14px 0;
+    font-size: 14px; font-weight: 600; color: #999;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active { color: #222; border-bottom: 2px solid #222; }
+
+  .panel { display: none; padding: 16px; background: #f7f7f7; }
+  .panel.active { display: block; }
+
+  .post-card {
+    background: #fff; border-radius: 16px;
+    padding: 16px; margin-bottom: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .post-card .p-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .post-card .p-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0; background: #e5e5e5;
+  }
+  .post-card .p-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .post-card .p-name { font-size: 14px; font-weight: 700; color: #222; }
+  .post-card .p-name span { font-weight: 400; color: #999; margin-left: 4px; }
+  .post-card .p-text { font-size: 14px; color: #333; line-height: 1.6; }
+.post-card .p-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  object-position: center;    /* 保留上半部分 */
+  border-radius: 12px;
+  margin-top: 10px;
+  display: block;
+  cursor: pointer;
+}
+  .post-card .p-actions {
+    display: flex; gap: 30px; margin-top: 10px;
+    font-size: 12px; color: #999;
+  }
+
+  .chat-box {
+    background: #f5f5f5;
+    height: calc(100vh - 340px);
+    min-height: 400px;
+    display: flex; flex-direction: column;
+  }
+  .chat-body {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .msg-row { display: flex; align-items: flex-start; gap: 8px; }
+  .msg-row.me { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0; background: #ddd;
+  }
+  .msg-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .bubble {
+    max-width: 70%; padding: 10px 14px; border-radius: 16px;
+    font-size: 14px; line-height: 1.5;
+    background: #fff; color: #333;
+  }
+  .msg-row.me .bubble { background: #222; color: #fff; }
+  .chat-input {
+    display: flex; padding: 10px; background: #fff; gap: 8px;
+    border-top: 1px solid #eee;
+  }
+  .chat-input input {
+    flex: 1; border: none; outline: none;
+    background: #f0f0f0; border-radius: 20px;
+    padding: 10px 16px; font-size: 14px;
+  }
+  .chat-input button {
+    background: #222; color: #fff;
+    border: none; border-radius: 20px;
+    padding: 0 18px; font-size: 14px; cursor: pointer;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .gallery img {
+    width: 100%; aspect-ratio: 1/1;
+    object-fit: cover; display: block; border-radius: 6px;
+    cursor: pointer;
+  }
+  .link-card {
+    background: #fff; border-radius: 14px;
+    padding: 16px; text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .link-card a {
+    text-decoration: none; color: #333;
+    font-size: 14px; font-weight: 600;
+  }
+
+  .msg-card {
+    background: #fff; border-radius: 16px;
+    padding: 16px; margin-bottom: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex; gap: 10px;
+  }
+  .msg-card .m-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0; background: #e5e5e5;
+  }
+  .msg-card .m-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .msg-card .m-body { flex: 1; }
+  .msg-card .m-text { font-size: 14px; color: #333; line-height: 1.6; }
+
+  /* 音乐按钮 */
+  .music-btn {
+  position: fixed;
+  right: 30px;
+  bottom: 72px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #b8b8b8;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 50;
+  }
+  .music-title {
+  position: fixed;
+  right: 70px;
+  bottom: 74px;
+  font-size: 12px;
+  color: #666;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 49;
+}
+.music-title.show { opacity: 1; }
+  .music-btn.playing { animation: spin 3s linear infinite; }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* 图片放大 */
+  .img-viewer {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 200;
+    justify-content: center; align-items: center;
+    padding: 20px;
+  }
+  .img-viewer.show { display: flex; }
+  .img-viewer img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  object-fit: contain;
+  transition: transform 0.1s;
+  touch-action: pinch-zoom;
+  }
+  #click-effect-layer {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+.click-heart {
+  position: absolute;
+  font-size: 20px;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #bbb;
+  pointer-events: none;
+  animation: floatUp 1s ease-out forwards;
+}
+@keyframes floatUp {
+  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -150%) scale(1.2); opacity: 0; }
+}
+</style>
+</head>
+<body>
+  <div id="click-effect-layer"></div>
+  <div class="app">
+
+    <div class="cover" onclick="openImg('20260722_214356.jpg')"></div>
+
+    <div class="profile-top">
+      <div class="avatar"><img src="mmexport1791752524758.jpg" alt="头像" onclick="openImg(this.src)"></div>
+      <div class="profile-meta">
+        <div class="name">知野</div>
+        <div class="handle">@Zhiye_Lazy</div>
+      </div>
+    </div>
+
+    <div class="profile-bio">
+      <div class="text">你所在之處，是我不得不思念的天涯海角。</div>
+    </div>
+
+    <div class="tags">
+      <div class="tag">Le-T</div>
+      <div class="tag">INFP</div>
+      <div class="tag">巨蟹</div>
+    </div>
+
+    <div class="info-line">
+      <span><span class="num">52</span> 正在关注</span>
+      <span><span class="num">13.14k</span> 关注者</span>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('posts', this)">帖子</div>
+      <div class="tab" onclick="switchTab('chat', this)">消息</div>
+      <div class="tab" onclick="switchTab('fav', this)">收藏</div>
+      <div class="tab" onclick="switchTab('msgs', this)">留言</div>
+    </div>
+<div class="panel active" id="panel-posts">
+    <!-- 帖子 -->
+      <div class="post-card">
+        <div class="p-head">
+          <div class="p-avatar"><img src="mmexport1791752524758.jpg"></div>
+          <div class="p-name">Zhiye<span>@zhiye_Lazy</span></div>
+        </div>
+        <div class="p-text">Nerd Project</div>
+        <img class="p-img" src="IMG_20261005_185528.jpg" onclick="openImg(this.src)">
+        <div class="p-actions">✎ 720　↗ 1224　♡99.9k</div>
+      </div>
+
+      <div class="post-card">
+        <div class="p-head">
+          <div class="p-avatar"><img src="mmexport1791752524758.jpg"></div>
+          <div class="p-name">Zhiye<span>@zhiye_Lazy</span></div>
+        </div>
+        <div class="p-text">張起靈×吳邪</div>
+        <img class="p-img" src="IMG_20261005_182220.jpg" onclick="openImg(this.src)">
+        <div class="p-actions">✎ 817　↗ 520　♡ 99.9k</div>
+      </div>
+
+      <div class="post-card">
+        <div class="p-head">
+          <div class="p-avatar"><img src="mmexport1791752524758.jpg"></div>
+          <div class="p-name">Zhiye <span>@zhiye_Lazy</span></div>
+        </div>
+        <div class="p-text">八重神子</div>
+        <img class="p-img" src="retouch_2026081915504117.jpg" onclick="openImg(this.src)">
+        <div class="p-actions">✎ 520　↗ 6.27k　♡99.9k</div>
+      </div>
+
+      
+      
+    </div>
+
+    <!-- 消息 -->
+    <div class="panel" id="panel-chat">
+      <div class="chat-box">
+        <div class="chat-body" id="chat-body"></div>
+        <div class="chat-input">
+          <input type="text" id="chat-input" placeholder="输入消息..." onkeydown="if(event.key==='Enter')sendMsg()">
+          <button onclick="sendMsg()">发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 收藏 -->
+    <div class="panel" id="panel-fav">
+      <div class="gallery">
+        <img src="mmexport1784748952592.jpg" onclick="openImg(this.src)">
+        <img src="无标题119_20260824181815.png" onclick="openImg(this.src)">
+        <img src="1789276679652.jpeg" onclick="openImg(this.src)">
+        <img src="IMG_20261005_182832.jpg" onclick="openImg(this.src)">
+        <img src="IMG_20261005_182204.jpg" onclick="openImg(this.src)">
+        <img src="IMG_20261005_182545.jpg" onclick="openImg(this.src)">
+        <img src="IMG_20261005_185328.jpg" onclick="openImg(this.src)">
+        <img src="IMG_20261005_185601.jpg" onclick="openImg(this.src)">
+        <img src="IMG_20261005_185246.jpg" onclick="openImg(this.src)">
+      </div>
+      
+    </div>
+
+    <!-- 留言 -->
+    <div class="panel" id="panel-msgs">
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“温良小女孩一枚。朋友圈看到就赞，扩列默认互补置顶。”</div></div>
+      </div>
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“朋友圈乱发，家产＞秀图=碎碎念/吐槽=三次＞营业”</div></div>
+      </div>
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“属性：原崩绝/1999/韩漫/韩腐/原创 BL＞GL＞＞BG”</div></div>
+      </div>
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“心肝：八重神子”</div></div>
+      </div>
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“家产：瓶邪/植时/happy2/书呆子/unsleep/in a scent/perle/无根树/融冰曲线/Flashlight/kiss me”</div></div>
+      </div>
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“我不是所有表了家产的都买周边，也不是所有周边都只买家产。没标家产但是我有在看的漫有好看相卡我会进行一个购入。”</div></div>
+      </div>
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“一步一跪一磕头只求家产在一起一辈子。”</div></div>
+      </div>
+      <div class="msg-card">
+        <div class="m-avatar"><img src="mmexport1791752524758.jpg"></div>
+        <div class="m-body"><div class="m-text">“豪掷千金只为看家产笑颜。”</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 音乐 -->
+  <div class="music-title" id="music-title">才二十三-方大同</div>
+  <div class="music-btn" id="music-btn" onclick="toggleMusic()">🎧</div>
+  <audio id="bgm" loop>
+    <source src="才二十三-方大同.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- 图片放大 -->
+  <div class="img-viewer" id="img-viewer" onclick="closeImg()">
+    <img id="img-viewer-img" src="">
+  </div>
+
+<script>
+  function switchTab(id, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-' + id).classList.add('active');
+  }
+
+  const replies = [
+    { keys: ['你好', 'hi'], reply: ['你好。', '我在呢。','有何事启奏？'] },
+    { keys: ['晚上好'], reply: ['晚上好。', '吃什么宵夜呢。','今晚九点有没有谁更新。。。'] },
+    { keys: ['晚安'], reply: ['晚安，好梦。', '要在梦里和我私奔吗？','现在睡觉可以梦到家产doi吗。。。'] },
+    { keys: ['喜欢', '喜欢你','我喜欢你'], reply: ['我也是。', '真的喜欢我吗？','你想听我说喜欢你吗？','你的喜欢对我来说有些为难啊。'] },
+    { keys: ['早安','早上好'], reply: ['早。', '你起来啦？要好好吃饭哦。','麦当劳还是肯德基还是早茶？'] },
+    { keys: ['今天天气真好'], reply: ['你也是。', '我觉得好冷啊！','啊好热的天气…'] },
+    { keys: ['好冷','冷死了'], reply: ['我也。。', '广东你让我热死了。','多穿点衣服小心着凉'] },
+    { keys: ['好热','热死了'], reply: ['广东牌大蒸笼欢迎您来。', '我们裸奔吧。','啊好热的天气…必须爽喝奶茶。！'] },
+    { keys: ['家产99','家产'], reply: ['家产牛逼。', '拆逆梦我家产的都死光光。','啊家产我要孝一辈子啊…'] },
+  ];
+
+  function addMsg(text, isMe) {
+  const body = document.getElementById('chat-body');
+  const row = document.createElement('div');
+  row.className = 'msg-row' + (isMe ? ' me' : '');
+  const avatar = isMe ? 'IMG_20261012_050122.jpg' : 'mmexport1791752524758.jpg';
+  row.innerHTML = `
+    <div class="msg-avatar"><img src="${avatar}"></div>
+    <div class="bubble">${text}</div>
+  `;
+  body.appendChild(row);
+  body.scrollTop = body.scrollHeight;
+  }
+
+  function sendMsg() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    addMsg(text, true);
+    input.value = '';
+
+    setTimeout(() => {
+      let matched = [];
+      for (const item of replies) {
+        if (item.keys.some(k => text.includes(k))) {
+          matched.push(...item.reply);
+        }
+      }
+      if (matched.length === 0) matched = [text];
+      const reply = matched[Math.floor(Math.random() * matched.length)];
+      addMsg(reply, false);
+    }, 600);
+  }
+
+  addMsg('要和我聊聊天吗？', false);
+
+  /* 音乐 */
+  function toggleMusic() {
+  const bgm = document.getElementById('bgm');
+  const btn = document.getElementById('music-btn');
+  const title = document.getElementById('music-title');
+  if (musicPlaying) {
+    bgm.pause();
+    btn.classList.remove('playing');
+    title.classList.remove('show');
+  } else {
+    bgm.play();
+    btn.classList.add('playing');
+    title.classList.add('show');
+  }
+  musicPlaying = !musicPlaying;
+  }
+
+  document.addEventListener('click', function autoPlayOnce() {
+    const bgm = document.getElementById('bgm');
+    const btn = document.getElementById('music-btn');
+    bgm.play().then(() => {
+      musicPlaying = true;
+      btn.classList.add('playing');
+      document.getElementById('music-title').classList.add('show');
+    }).catch(() => {});
+    document.removeEventListener('click', autoPlayOnce);
+  });
+
+  /* 图片放大 */
+  let imgScale = 1;
+let imgX = 0, imgY = 0;
+let startDist = 0, startScale = 1;
+let startX = 0, startY = 0, startTouchX = 0, startTouchY = 0;
+
+function openImg(src) {
+  const img = document.getElementById('img-viewer-img');
+  img.src = src;
+  imgScale = 1; imgX = 0; imgY = 0;
+  img.style.transform = 'scale(1) translate(0, 0)';
+  document.getElementById('img-viewer').classList.add('show');
+}
+function closeImg() {
+  document.getElementById('img-viewer').classList.remove('show');
+}
+
+document.getElementById('img-viewer').addEventListener('touchstart', function(e) {
+  if (e.touches.length === 2) {
+    startDist = Math.hypot(
+      e.touches[0].pageX - e.touches[1].pageX,
+      e.touches[0].pageY - e.touches[1].pageY
+    );
+    startScale = imgScale;
+  } else if (e.touches.length === 1) {
+    startTouchX = e.touches[0].clientX;
+    startTouchY = e.touches[0].clientY;
+    startX = imgX;
+    startY = imgY;
+  }
+});
+
+document.getElementById('img-viewer').addEventListener('touchmove', function(e) {
+  const img = document.getElementById('img-viewer-img');
+  if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[0].pageX - e.touches[1].pageX,
+      e.touches[0].pageY - e.touches[1].pageY
+    );
+    imgScale = Math.min(5, Math.max(1, startScale * dist / startDist));
+    img.style.transform = `scale(${imgScale}) translate(${imgX}px, ${imgY}px)`;
+  } else if (e.touches.length === 1 && imgScale > 1) {
+    imgX = startX + (e.touches[0].clientX - startTouchX);
+    imgY = startY + (e.touches[0].clientY - startTouchY);
+    img.style.transform = `scale(${imgScale}) translate(${imgX}px, ${imgY}px)`;
+  }
+});
+
+let lastTap = 0;
+document.getElementById('img-viewer').addEventListener('click', function(e) {
+  if (e.target.id !== 'img-viewer-img') return;
+  const now = Date.now();
+  if (now - lastTap < 300) {
+    const img = document.getElementById('img-viewer-img');
+    if (imgScale > 1) {
+      imgScale = 1; imgX = 0; imgY = 0;
+    } else {
+      imgScale = 2;
+    }
+    img.style.transform = `scale(${imgScale}) translate(${imgX}px, ${imgY}px)`;
+  }
+  lastTap = now;
+});
+  document.addEventListener('click', function(e) {
+  const count = Math.floor(Math.random() * 8) + 6;
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const star = document.createElement('div');
+      star.className = 'click-heart';
+      star.textContent = '☆';
+      star.style.left = (Math.random() * window.innerWidth) + 'px';
+      star.style.top = (Math.random() * window.innerHeight) + 'px';
+      document.getElementById('click-effect-layer').appendChild(star);
+      setTimeout(() => star.remove(), 1000);
+    }, i * 80);
+  }
+});
+  function autoStars() {
+  const count = Math.floor(Math.random() * 2) + 3;
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const star = document.createElement('div');
+      star.className = 'click-heart';
+      star.textContent = '★';
+      star.style.left = (Math.random() * window.innerWidth) + 'px';
+      star.style.top = (Math.random() * window.innerHeight) + 'px';
+      document.getElementById('click-effect-layer').appendChild(star);
+      setTimeout(() => star.remove(), 1000);
+    }, i * 80);
+  }
+}
+
+setInterval(autoStars, 300);
+</script>
+</body>
+</html>
